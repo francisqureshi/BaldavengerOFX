@@ -6,6 +6,7 @@
 using std::string;
 #include <string> 
 #include <fstream>
+#include <memory>
 
 #include "ofxsImageEffect.h"
 #include "ofxsMultiThread.h"
@@ -415,62 +416,62 @@ sendMessage(OFX::Message::eMessageError, "", string("Error: Cannot save " + NAME
 
 void ConvolutionPlugin::setupAndProcess(Convolution& p_Convolution, const OFX::RenderArguments& p_Args)
 {
-std::auto_ptr<OFX::Image> dst(m_DstClip->fetchImage(p_Args.time));
-OFX::BitDepthEnum dstBitDepth = dst->getPixelDepth();
-OFX::PixelComponentEnum dstComponents = dst->getPixelComponents();
+    std::unique_ptr<OFX::Image> dst(m_DstClip->fetchImage(p_Args.time));
+    OFX::BitDepthEnum dstBitDepth = dst->getPixelDepth();
+    OFX::PixelComponentEnum dstComponents = dst->getPixelComponents();
 
-std::auto_ptr<OFX::Image> src(m_SrcClip->fetchImage(p_Args.time));
-OFX::BitDepthEnum srcBitDepth = src->getPixelDepth();
-OFX::PixelComponentEnum srcComponents = src->getPixelComponents();
+    std::unique_ptr<OFX::Image> src(m_SrcClip->fetchImage(p_Args.time));
+    OFX::BitDepthEnum srcBitDepth = src->getPixelDepth();
+    OFX::PixelComponentEnum srcComponents = src->getPixelComponents();
 
-if ((srcBitDepth != dstBitDepth) || (srcComponents != dstComponents))
-{
-OFX::throwSuiteStatusException(kOfxStatErrValue);
-}
+    if ((srcBitDepth != dstBitDepth) || (srcComponents != dstComponents))
+    {
+        OFX::throwSuiteStatusException(kOfxStatErrValue);
+    }
 
-int convolve_i;
-m_Convolve->getValueAtTime(p_Args.time, convolve_i);
-ConvolutionEnum ConvolutionFilter = (ConvolutionEnum)convolve_i;
-int _convolve = convolve_i;
+    int convolve_i;
+    m_Convolve->getValueAtTime(p_Args.time, convolve_i);
+    ConvolutionEnum ConvolutionFilter = (ConvolutionEnum)convolve_i;
+    int _convolve = convolve_i;
 
-bool display = m_Display->getValueAtTime(p_Args.time);
-int _display = display ? 1 : 0;
+    bool display = m_Display->getValueAtTime(p_Args.time);
+    int _display = display ? 1 : 0;
 
-float _adjust[3];
-float _matrix[9];
+    float _adjust[3];
+    float _matrix[9];
 
-_adjust[0] = m_Adjust1->getValueAtTime(p_Args.time);
-_adjust[1] = m_Adjust2->getValueAtTime(p_Args.time);
-_adjust[2] = m_Adjust3->getValueAtTime(p_Args.time);
+    _adjust[0] = m_Adjust1->getValueAtTime(p_Args.time);
+    _adjust[1] = m_Adjust2->getValueAtTime(p_Args.time);
+    _adjust[2] = m_Adjust3->getValueAtTime(p_Args.time);
 
-RGBValues rMatrix, gMatrix, bMatrix;
-m_Row1->getValueAtTime(p_Args.time, rMatrix.r, rMatrix.g, rMatrix.b);
-m_Row2->getValueAtTime(p_Args.time, gMatrix.r, gMatrix.g, gMatrix.b);
-m_Row3->getValueAtTime(p_Args.time, bMatrix.r, bMatrix.g, bMatrix.b);
-_matrix[0] = rMatrix.r;
-_matrix[1] = rMatrix.g;
-_matrix[2] = rMatrix.b;
-_matrix[3] = gMatrix.r;
-_matrix[4] = gMatrix.g;
-_matrix[5] = gMatrix.b;
-_matrix[6] = bMatrix.r;
-_matrix[7] = bMatrix.g;
-_matrix[8] = bMatrix.b;
+    RGBValues rMatrix, gMatrix, bMatrix;
+    m_Row1->getValueAtTime(p_Args.time, rMatrix.r, rMatrix.g, rMatrix.b);
+    m_Row2->getValueAtTime(p_Args.time, gMatrix.r, gMatrix.g, gMatrix.b);
+    m_Row3->getValueAtTime(p_Args.time, bMatrix.r, bMatrix.g, bMatrix.b);
+    _matrix[0] = rMatrix.r;
+    _matrix[1] = rMatrix.g;
+    _matrix[2] = rMatrix.b;
+    _matrix[3] = gMatrix.r;
+    _matrix[4] = gMatrix.g;
+    _matrix[5] = gMatrix.b;
+    _matrix[6] = bMatrix.r;
+    _matrix[7] = bMatrix.g;
+    _matrix[8] = bMatrix.b;
 
-p_Convolution.setDstImg(dst.get());
-p_Convolution.setSrcImg(src.get());
+    p_Convolution.setDstImg(dst.get());
+    p_Convolution.setSrcImg(src.get());
 
-// Setup GPU Render arguments
-p_Convolution.setGPURenderArgs(p_Args);
+    // Setup GPU Render arguments
+    p_Convolution.setGPURenderArgs(p_Args);
 
-// Set the render window
-p_Convolution.setRenderWindow(p_Args.renderWindow);
+    // Set the render window
+    p_Convolution.setRenderWindow(p_Args.renderWindow);
 
-// Set the scales
-p_Convolution.setScales(_convolve, _display, _adjust, _matrix);
+    // Set the scales
+    p_Convolution.setScales(_convolve, _display, _adjust, _matrix);
 
-// Call the base class process member, this will call the derived templated process code
-p_Convolution.process();
+    // Call the base class process member, this will call the derived templated process code
+    p_Convolution.process();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
